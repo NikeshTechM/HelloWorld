@@ -1,0 +1,40 @@
+schemaVersion: 2.2.0
+metadata:
+  name: android-dev
+  description: Android development workspace with Android SDK and Gradle
+
+components:
+  - name: android-sdk
+    volume:
+      size: 2Gi
+
+  - name: android-dev
+    container:
+      image: openjdk:11
+      memoryLimit: 4Gi
+      cpuLimit: 2000m
+      mountSources: true
+      volumeMounts:
+        - name: android-sdk
+          path: /opt/android-sdk
+      command: ["/bin/bash"]
+      args:
+        - "-c"
+        - |
+          if [ ! -d "/opt/android-sdk/cmdline-tools/latest" ]; then
+            echo "Downloading Android command line tools..."
+            mkdir -p /opt/android-sdk/cmdline-tools
+            wget -q https://dl.google.com/android/repository/commandlinetools-linux-8092744_latest.zip -O sdk.zip
+            unzip sdk.zip -d /opt/android-sdk/cmdline-tools
+            mv /opt/android-sdk/cmdline-tools/cmdline-tools /opt/android-sdk/cmdline-tools/latest
+            rm sdk.zip
+          fi
+          echo "Android SDK ready. Keeping container alive..."
+          tail -f /dev/null
+
+commands:
+  - id: init
+    exec:
+      component: android-dev
+      commandLine: echo "Android Dev Environment Ready!"
+      workingDir: /projects
